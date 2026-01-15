@@ -14,30 +14,23 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronsUpDown,
-    ArrowUpDown,
     Plus,
     Pencil,
     Trash2,
     Eye,
     Printer,
-    FileText,
-    Settings
+    FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface DataItem {
-    id: string;
-    name: string;
-    description: string;
-    active: boolean;
-    createdOn: string;
-    createdBy: string;
-    modifiedOn: string;
-    modifiedBy: string;
+interface EmployeeItem {
+    v_Plnt_Code: string;
+    v_Empl_Code: string;
+    v_Empl_Name: string;
 }
 
 interface DataTableProps {
-    data: DataItem[];
+    data: EmployeeItem[];
     total: number;
     loading?: boolean;
 }
@@ -68,13 +61,9 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                     </Button>
                 </div>
 
+                {/* Pagination (Simplified) */}
                 <div className="flex items-center gap-2 text-xs text-stone-600">
-                    <span>1-8 of 8 items</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7"><ChevronLeft className="h-3 w-3" /></Button>
-                    <Button variant="outline" size="icon" className="h-7 w-7"><ChevronRight className="h-3 w-3" /></Button>
-                    <div className="flex items-center gap-1 border rounded px-1 py-0.5 bg-stone-50">
-                        10/page <ChevronRight className="h-3 w-3 rotate-90" />
-                    </div>
+                    <span>{data.length} items</span>
                 </div>
             </div>
 
@@ -86,37 +75,17 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                             <TableHead className="w-12 text-center p-2"><Checkbox /></TableHead>
                             <TableHead className="font-bold text-stone-700">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Name <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                    Plant Code <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
                             <TableHead className="font-bold text-stone-700">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Description <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                    Employee Code <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
                             <TableHead className="font-bold text-stone-700">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Active <ChevronsUpDown className="h-3 w-3 text-stone-400" />
-                                </div>
-                            </TableHead>
-                            <TableHead className="font-bold text-stone-700">
-                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Created On <ChevronsUpDown className="h-3 w-3 text-stone-400" />
-                                </div>
-                            </TableHead>
-                            <TableHead className="font-bold text-stone-700">
-                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Created By <ChevronsUpDown className="h-3 w-3 text-stone-400" />
-                                </div>
-                            </TableHead>
-                            <TableHead className="font-bold text-stone-700">
-                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Modified On <ChevronsUpDown className="h-3 w-3 text-stone-400" />
-                                </div>
-                            </TableHead>
-                            <TableHead className="font-bold text-stone-700">
-                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                    Modified By <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                    Employee Name <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
                         </TableRow>
@@ -124,55 +93,28 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8">Loading...</TableCell>
+                                <TableCell colSpan={5} className="text-center py-8">Loading...</TableCell>
                             </TableRow>
                         ) : data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8">No results found.</TableCell>
+                                <TableCell colSpan={5} className="text-center py-8">No results found.</TableCell>
                             </TableRow>
                         ) : (
                             data.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-blue-50/50">
+                                <TableRow key={row.v_Empl_Code} className="hover:bg-blue-50/50">
                                     <TableCell className="text-center py-2 h-8 w-10">
                                         <div className="h-4 w-4 bg-stone-200 rounded mx-auto" ></div>
                                     </TableCell>
                                     <TableCell className="text-center py-2"><Checkbox /></TableCell>
-                                    <TableCell className={cn("py-2 font-medium", row.active ? "text-blue-600" : "")}>{row.name}</TableCell>
-                                    <TableCell className="py-2 text-stone-600">{row.description}</TableCell>
-                                    <TableCell className="py-2 text-stone-600">{row.active ? "yes" : "no"}</TableCell>
-                                    <TableCell className="py-2 text-stone-600 text-xs">{formatDate(row.createdOn)}</TableCell>
-                                    <TableCell className="py-2 text-stone-600">{row.createdBy}</TableCell>
-                                    <TableCell className="py-2 text-stone-600 text-xs">{formatDate(row.modifiedOn)}</TableCell>
-                                    <TableCell className="py-2 text-stone-600">{row.modifiedBy}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Plnt_Code}</TableCell>
+                                    <TableCell className="py-2 font-medium">{row.v_Empl_Code}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Empl_Name}</TableCell>
                                 </TableRow>
                             ))
                         )}
-                        {/* Empty rows to fill space if needed, or just standard table */}
                     </TableBody>
                 </Table>
             </div>
-
-            <div className="flex items-center justify-between pt-2">
-                <div className="text-xs text-stone-500">1-8 of 8 items</div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7"><ChevronLeft className="h-3 w-3" /></Button>
-                    <Button variant="outline" size="icon" className="h-7 w-7"><ChevronRight className="h-3 w-3" /></Button>
-                    <div className="flex items-center gap-1 border rounded px-2 py-1 text-xs bg-stone-50">
-                        10/page <ChevronRight className="h-3 w-3 rotate-90" />
-                    </div>
-                </div>
-            </div>
         </div>
     );
-}
-
-function formatDate(dateString: string) {
-    // Basic parse for mock data "2017-02-15T00:00:00"
-    try {
-        const d = new Date(dateString);
-        // Format to YYYY-MM-DD HH:mm:ss
-        return d.toISOString().replace("T", " ").substring(0, 19);
-    } catch {
-        return dateString;
-    }
 }

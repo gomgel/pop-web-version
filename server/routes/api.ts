@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { mockAccounts } from '../data/mockData';
+import { getEmployees } from '../services/pmemplymService';
 
 const router = express.Router();
 
@@ -89,6 +90,19 @@ router.get('/search', (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/pmemplym', async (req: Request, res: Response) => {
+    try {
+        const plantCode = req.query.plantCode as string;
+        const data = await getEmployees(plantCode);
+        res.json({
+            data
+        });
+    } catch (error) {
+        console.error('Error in /pmemplym:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });

@@ -20,7 +20,7 @@ export default function DashboardPage() {
       if (searchParams.query) q.set('query', searchParams.query);
 
       // In a real app we would use env var, but for this dev setup:
-      const res = await fetch(`http://localhost:4000/api/search?${q.toString()}`);
+      const res = await fetch(`http://localhost:4000/api/pmemplym?plantCode=1000`);
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setData(json.data || []);
