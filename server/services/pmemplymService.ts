@@ -1,40 +1,81 @@
 import { mockEmployees, Employee_Type } from '../data/mockDataForPMEMPLYM';
 
-// In a real scenario, we would import oracledb here
-// import oracledb from 'oracledb';
+import oracledb from 'oracledb';
 
 export const getEmployees = async (plantCode: string): Promise<Employee_Type[]> => {
-    // Check for DB connection info (simulated)
-    // Check for DB connection info (simulated)
     const connectionString = process.env.ORACLE_CONNECTION_STRING;
     const user = process.env.ORACLE_USER;
     const password = process.env.ORACLE_PASSWORD;
 
-    const useRealDb = connectionString && user && password;
-
-    if (useRealDb) {
-        try {
-            console.log('Attempting to connect to Oracle DB...');
-            // Logic to connect to Oracle would go here
-            // const connection = await oracledb.getConnection({ ... });
-            // const result = await connection.execute(...)
-            // return result;
-
-            // For now, even if "configured", we might fail or fall back if not actually implemented
-            // But per requirements, "change the codes but still return mockdata".
-            // So we will simulate a DB call structure but return mock data for now 
-            // or implement the actual call if I had the library. 
-
-            // Since I don't have the library installed, I will log and fallback to mock
-            console.warn('Oracle DB configured but driver not present/implemented. Returning mock data.');
-            return filterMockData(plantCode);
-        } catch (error) {
-            console.error('Failed to query Oracle DB', error);
-            throw error;
-        }
-    } else {
-        // Return mock data
+    if (!connectionString) {
         return filterMockData(plantCode);
+    }
+
+    let connection;
+    try {
+        console.log('Attempting to connect to Oracle DB...');
+        connection = await oracledb.getConnection({
+            user: user,
+            password: password,
+            connectString: connectionString
+        });
+
+        // Call the stored procedure
+        const result = await connection.execute(
+            `BEGIN 
+                Pkg_Temporary.p_sPmemplym(
+                    cursor_data => :cursor_data,
+                    v_Plnt_Code => :v_Plnt_Code
+                ); 
+             END;`,
+            {
+                cursor_data: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT },
+                v_Plnt_Code: plantCode
+            }
+        );
+
+        const resultSet = (result.outBinds as any)?.cursor_data;
+
+        if (resultSet) {
+            try {
+                const rows = await resultSet.getRows(); // Fetch all rows
+
+                // Map the database rows to the Employee_Type interface
+                // Handles both array (default for cursors) and object formats
+                const results: Employee_Type[] = (rows as any[]).map((row: any) => {
+                    if (Array.isArray(row)) {
+                        return {
+                            v_Plnt_Code: row[0],
+                            v_Empl_Code: row[1],
+                            v_Empl_Name: row[2]
+                        };
+                    } else {
+                        return {
+                            v_Plnt_Code: row.V_PLNT_CODE || row.v_Plnt_Code,
+                            v_Empl_Code: row.V_EMPL_CODE || row.v_Empl_Code,
+                            v_Empl_Name: row.V_EMPL_NAME || row.v_Empl_Name
+                        };
+                    }
+                });
+                return results;
+
+            } finally {
+                await resultSet.close();
+            }
+        }
+
+        return [];
+    } catch (error) {
+        console.error('Failed to query Oracle DB', error);
+        throw error;
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (err) {
+                console.error('Error closing connection', err);
+            }
+        }
     }
 };
 
