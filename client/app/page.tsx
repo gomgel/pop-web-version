@@ -16,11 +16,15 @@ export default function DashboardPage() {
     try {
       // Build query string
       const q = new URLSearchParams();
-      // Add mock defaults for now or params passed
-      if (searchParams.query) q.set('query', searchParams.query);
+      // Add default plant if not provided
+      const plantCode = searchParams.plantCode || '2000';
+      q.set('plantCode', plantCode);
+
+      if (searchParams.emplCode) q.set('emplCode', searchParams.emplCode);
+      if (searchParams.emplName) q.set('emplName', searchParams.emplName);
 
       // In a real app we would use env var, but for this dev setup:
-      const res = await fetch(`http://localhost:4000/api/pmemplym?plantCode=1000`);
+      const res = await fetch(`http://localhost:4000/api/pmemplym?${q.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const json = await res.json();
       setData(json.data || []);
@@ -32,9 +36,9 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [fetchData]);
 
   return (
     <div className="h-full flex flex-col bg-stone-100">

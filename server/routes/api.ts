@@ -97,7 +97,9 @@ router.get('/search', (req: Request, res: Response) => {
 router.get('/pmemplym', async (req: Request, res: Response) => {
     try {
         const plantCode = req.query.plantCode as string;
-        const data = await getEmployees(plantCode);
+        const emplCode = req.query.emplCode as string;
+        const emplName = req.query.emplName as string;
+        const data = await getEmployees(plantCode, emplCode, emplName);
         res.json({
             data
         });

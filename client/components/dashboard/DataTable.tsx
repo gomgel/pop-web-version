@@ -27,6 +27,10 @@ interface EmployeeItem {
     v_Plnt_Code: string;
     v_Empl_Code: string;
     v_Empl_Name: string;
+    v_Hrde_Code: string;
+    v_Dept_Code: string;
+    v_Scre_Date: string;
+    v_Scre_Time: string;
 }
 
 interface DataTableProps {
@@ -67,25 +71,45 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                 </div>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-md overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-stone-50">
                         <TableRow>
                             <TableHead className="w-10 text-center"><span className="text-stone-400">-</span></TableHead>
                             <TableHead className="w-12 text-center p-2"><Checkbox /></TableHead>
-                            <TableHead className="font-bold text-stone-700">
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
                                     Plant Code <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
-                            <TableHead className="font-bold text-stone-700">
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
                                     Employee Code <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
-                            <TableHead className="font-bold text-stone-700">
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
                                 <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
                                     Employee Name <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                </div>
+                            </TableHead>
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
+                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
+                                    HR Dept <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                </div>
+                            </TableHead>
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
+                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
+                                    Dept Code <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                </div>
+                            </TableHead>
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
+                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
+                                    Create Date <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                </div>
+                            </TableHead>
+                            <TableHead className="font-bold text-stone-700 whitespace-nowrap">
+                                <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
+                                    Create Time <ChevronsUpDown className="h-3 w-3 text-stone-400" />
                                 </div>
                             </TableHead>
                         </TableRow>
@@ -93,11 +117,11 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">Loading...</TableCell>
+                                <TableCell colSpan={9} className="text-center py-8">Loading...</TableCell>
                             </TableRow>
                         ) : data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8">No results found.</TableCell>
+                                <TableCell colSpan={9} className="text-center py-8">No results found.</TableCell>
                             </TableRow>
                         ) : (
                             data.map((row) => (
@@ -109,6 +133,10 @@ export function DataTable({ data, total, loading }: DataTableProps) {
                                     <TableCell className="py-2 text-stone-600">{row.v_Plnt_Code}</TableCell>
                                     <TableCell className="py-2 font-medium">{row.v_Empl_Code}</TableCell>
                                     <TableCell className="py-2 text-stone-600">{row.v_Empl_Name}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Hrde_Code}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Dept_Code}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Scre_Date}</TableCell>
+                                    <TableCell className="py-2 text-stone-600">{row.v_Scre_Time}</TableCell>
                                 </TableRow>
                             ))
                         )}
