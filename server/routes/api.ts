@@ -99,9 +99,17 @@ router.get('/pmemplym', async (req: Request, res: Response) => {
         const plantCode = req.query.plantCode as string;
         const emplCode = req.query.emplCode as string;
         const emplName = req.query.emplName as string;
-        const data = await getEmployees(plantCode, emplCode, emplName);
+
+        const page = parseInt(req.query.page as string) || 1;
+        const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+        const { data, total } = await getEmployees(plantCode, emplCode, emplName, page, pageSize);
+
         res.json({
-            data
+            data,
+            total,
+            page,
+            pageSize
         });
     } catch (error) {
         console.error('Error in /pmemplym:', error);

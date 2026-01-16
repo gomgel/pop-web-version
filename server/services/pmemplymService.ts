@@ -2,13 +2,13 @@ import { mockEmployees, Employee_Type } from '../data/mockDataForPMEMPLYM';
 
 import oracledb from 'oracledb';
 
-export const getEmployees = async (plantCode: string, emplCode?: string, emplName?: string): Promise<Employee_Type[]> => {
+export const getEmployees = async (plantCode: string, emplCode?: string, emplName?: string, page: number = 1, pageSize: number = 10): Promise<{ data: Employee_Type[], total: number }> => {
     const connectionString = process.env.ORACLE_CONNECTION_STRING;
     const user = process.env.ORACLE_USER;
     const password = process.env.ORACLE_PASSWORD;
 
     if (!connectionString) {
-        return filterMockData(plantCode, emplCode, emplName);
+        return filterMockData(plantCode, emplCode, emplName, page, pageSize);
     }
 
     let connection;
@@ -27,18 +27,25 @@ export const getEmployees = async (plantCode: string, emplCode?: string, emplNam
                     cursor_data => :cursor_data,
                     v_Plnt_Code => :v_Plnt_Code,
                     v_Empl_Code => :v_Empl_Code,
-                    v_Empl_Name => :v_Empl_Name
+                    v_Empl_Name => :v_Empl_Name,
+                    v_Page_No   => :v_Page_No,
+                    v_Page_Size => :v_Page_Size,
+                    v_Total_Count => :v_Total_Count
                 ); 
              END;`,
             {
                 cursor_data: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT },
                 v_Plnt_Code: plantCode,
                 v_Empl_Code: emplCode || '',
-                v_Empl_Name: emplName || ''
+                v_Empl_Name: emplName || '',
+                v_Page_No: page,
+                v_Page_Size: pageSize,
+                v_Total_Count: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT }
             }
         );
 
         const resultSet = (result.outBinds as any)?.cursor_data;
+        const totalCount = (result.outBinds as any)?.v_Total_Count || 0;
 
         if (resultSet) {
             try {
@@ -69,14 +76,14 @@ export const getEmployees = async (plantCode: string, emplCode?: string, emplNam
                         };
                     }
                 });
-                return results;
+                return { data: results, total: totalCount };
 
             } finally {
                 await resultSet.close();
             }
         }
 
-        return [];
+        return { data: [], total: 0 };
     } catch (error) {
         console.error('Failed to query Oracle DB', error);
         throw error;
@@ -91,7 +98,7 @@ export const getEmployees = async (plantCode: string, emplCode?: string, emplNam
     }
 };
 
-function filterMockData(plantCode: string, emplCode?: string, emplName?: string): Employee_Type[] {
+function filterMockData(plantCode: string, emplCode?: string, emplName?: string, page: number = 1, pageSize: number = 10): { data: Employee_Type[], total: number } {
     // Simulate the procedure logic: filtering by v_Plnt_Code, v_Empl_Code, v_Empl_Name
     let data = mockEmployees;
 
@@ -105,5 +112,10 @@ function filterMockData(plantCode: string, emplCode?: string, emplName?: string)
         data = data.filter(emp => emp.v_Empl_Name.includes(emplName));
     }
 
-    return data;
+    const total = data.length;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pagedData = data.slice(startIndex, endIndex);
+
+    return { data: pagedData, total };
 }
