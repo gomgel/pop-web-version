@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { mockAccounts } from '../data/mockData';
 import { getEmployees } from '../services/pmemplymService';
+import { getPmautolb } from '../services/pmautolbService';
 
 const router = express.Router();
 
@@ -94,7 +95,7 @@ router.get('/search', (req: Request, res: Response) => {
     }
 });
 
-router.get('/pmemplym', async (req: Request, res: Response) => {
+router.get('/employee', async (req: Request, res: Response) => {
     try {
         const plantCode = req.query.plantCode as string;
         const emplCode = req.query.emplCode as string;
@@ -112,7 +113,31 @@ router.get('/pmemplym', async (req: Request, res: Response) => {
             pageSize
         });
     } catch (error) {
-        console.error('Error in /pmemplym:', error);
+        console.error('Error in /api/employee:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/label/product', async (req: Request, res: Response) => {
+    try {
+        const plantCode = req.query.plantCode as string;
+        const prdtTpcd = req.query.prdtTpcd as string;
+        const prvsName = req.query.prvsName as string;
+        const possInfo = req.query.possInfo as string;
+
+        const page = parseInt(req.query.page as string) || 1;
+        const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+        const { data, total } = await getPmautolb(plantCode, prdtTpcd, prvsName, possInfo, page, pageSize);
+
+        res.json({
+            data,
+            total,
+            page,
+            pageSize
+        });
+    } catch (error) {
+        console.error('Error in /api/label/product:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });

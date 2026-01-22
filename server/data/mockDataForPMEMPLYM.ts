@@ -10,7 +10,7 @@ export interface Employee_Type {
 
 export const mockEmployees: Employee_Type[] = [
     {
-        v_Plnt_Code: "1000",
+        v_Plnt_Code: "2000",
         v_Empl_Code: "E001",
         v_Empl_Name: "John Doe",
         v_Hrde_Code: "HR001",
@@ -19,7 +19,7 @@ export const mockEmployees: Employee_Type[] = [
         v_Scre_Time: "090000"
     },
     {
-        v_Plnt_Code: "1000",
+        v_Plnt_Code: "2000",
         v_Empl_Code: "E002",
         v_Empl_Name: "Jane Smith",
         v_Hrde_Code: "HR002",

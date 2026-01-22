@@ -8,20 +8,20 @@ export function Header() {
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 font-semibold text-lg tracking-tight">
                     <div className="w-8 h-8 bg-transparent border-2 border-white flex items-center justify-center font-bold text-xl">
-                        F
+                        P
                     </div>
-                    <span>Factumsoft</span>
+                    <span>Coway POP System</span>
                 </div>
             </div>
 
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src="/placeholder-user.jpg" alt="User" />
                         <AvatarFallback className="text-stone-900 bg-stone-200">AH</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">armine.hayrapetyan</span>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-1 text-stone-400">
                     <div className="relative">

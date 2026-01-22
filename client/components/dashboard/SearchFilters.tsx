@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-export function SearchFilters({ onSearch }: { onSearch: (params: any) => void }) {
+export function SearchFilters({ onSearch, onExport }: { onSearch: (params: any) => void, onExport: () => void }) {
     const [plant, setPlant] = useState("2000");
     const [emplCode, setEmplCode] = useState("");
     const [emplName, setEmplName] = useState("");
@@ -35,14 +35,15 @@ export function SearchFilters({ onSearch }: { onSearch: (params: any) => void })
             <div className="flex items-center gap-6">
                 {/* Plant */}
                 <div className="flex items-center gap-2">
-                    <Label className="text-sm text-stone-600 font-normal">PLANT :</Label>
-                    <Select value={plant} onValueChange={setPlant}>
+                    <Label className="text-sm text-stone-600 font-normal">Plant :</Label>
+                    <Select value={plant} defaultValue="2000" onValueChange={setPlant}>
                         <SelectTrigger className="w-32">
                             <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="1000">1000</SelectItem>
                             <SelectItem value="2000">2000</SelectItem>
+                            <SelectItem value="2001">2001</SelectItem>
+                            <SelectItem value="2002">2002</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -83,6 +84,12 @@ export function SearchFilters({ onSearch }: { onSearch: (params: any) => void })
                     onClick={handleClear}
                 >
                     Clear
+                </Button>
+                <Button
+                    className="bg-green-700 hover:bg-green-600 text-white px-8 uppercase font-semibold ml-auto"
+                    onClick={onExport}
+                >
+                    Export
                 </Button>
             </div>
         </div>
