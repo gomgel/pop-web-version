@@ -17,6 +17,7 @@ const sidebarData = [
             { id: "packaging", name: "포장적재마스터", href: "/master/packaging" },
             { id: "label/product", name: "라벨자동화 마스터(제품라벨)", href: "/master/label/product" },
             { id: "label/box", name: "라벨자동화 마스터(박스라벨)", href: "/master/label/box" },
+            { id: "table", name: "테이블조회", href: "/master/table" },
         ],
     },
     { id: "plan", title: "생산계획관리", items: [] },

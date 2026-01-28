@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { mockAccounts } from '../data/mockData';
 import { getEmployees } from '../services/pmemplymService';
 import { getPmautolb } from '../services/pmautolbService';
+import { getTables, getTableMetadata, getTableData } from '../services/pmtableService';
 
 const router = express.Router();
 
@@ -138,6 +139,50 @@ router.get('/label/product', async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Error in /api/label/product:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/tables', async (req: Request, res: Response) => {
+    try {
+        const tables = await getTables();
+        res.json(tables);
+    } catch (error) {
+        console.error('Error in /api/tables:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/table/metadata', async (req: Request, res: Response) => {
+    try {
+        const tableName = req.query.tableName as string;
+        if (!tableName) return res.status(400).json({ message: 'tableName is required' });
+        const metadata = await getTableMetadata(tableName);
+        res.json(metadata);
+    } catch (error) {
+        console.error('Error in /api/table/metadata:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/table/data', async (req: Request, res: Response) => {
+    try {
+        const { tableName, page, pageSize, ...filters } = req.query;
+        if (!tableName) return res.status(400).json({ message: 'tableName is required' });
+
+        const p = parseInt(page as string) || 1;
+        const ps = parseInt(pageSize as string) || 10;
+
+        const { data, total } = await getTableData(tableName as string, filters as any, p, ps);
+
+        res.json({
+            data,
+            total,
+            page: p,
+            pageSize: ps
+        });
+    } catch (error) {
+        console.error('Error in /api/table/data:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
