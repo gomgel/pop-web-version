@@ -1,8 +1,18 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Bell, ChevronDown } from "lucide-react";
+import { Settings, Bell, ChevronDown, LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
 
 export function Header() {
+    const { logout, userInfo } = useAuthStore();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        logout();
+        router.push("/");
+    };
+
     return (
         <header className="h-14 border-b bg-stone-900 text-stone-50 flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-4">
@@ -14,14 +24,19 @@ export function Header() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4">
-                {/* <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                        <AvatarFallback className="text-stone-900 bg-stone-200">AH</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">armine.hayrapetyan</span>
-                </div> */}
+            <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3 pr-4 border-r border-stone-700">
+                    <span className="text-sm font-medium text-stone-300">{userInfo?.v_Empl_Name || "User"}</span>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-stone-400 hover:text-white hover:bg-stone-800 gap-2 h-8 px-2"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Logout</span>
+                    </Button>
+                </div>
 
                 <div className="flex items-center gap-1 text-stone-400">
                     <div className="relative">

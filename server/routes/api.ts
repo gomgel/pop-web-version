@@ -3,8 +3,24 @@ import { mockAccounts } from '../data/mockData';
 import { getEmployees } from '../services/pmemplymService';
 import { getPmautolb } from '../services/pmautolbService';
 import { getTables, getTableMetadata, getTableData } from '../services/pmtableService';
+import { login } from '../services/authService';
 
 const router = express.Router();
+
+router.post('/login', async (req: Request, res: Response) => {
+    try {
+        const { plant, emplCode, password } = req.body;
+        if (!plant || !emplCode || !password) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        const result = await login(plant, emplCode, password);
+        res.json(result);
+    } catch (error) {
+        console.error('Error in /api/login:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
 
 router.get('/search', (req: Request, res: Response) => {
     try {
