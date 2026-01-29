@@ -165,13 +165,29 @@ export const getTableData = async (
         const rows = await resultSet.getRows(pageSize);
         await resultSet.close();
 
-        // Convert array rows to objects if necessary (procedure returns rows typically as arrays unless specified)
-        // However, oracledb.OUT_FORMAT_OBJECT won't work easily with cursors in 10g/older drivers.
-        // We'll need to map them based on our metadata or just return as is.
-        // For simplicity in this demo, we assume the client handles the order or we map them here.
-        // Let's fetch metadata internally or rely on the fact that 'SELECT *' order is consistent.
+        // Fetch metadata to map array rows to objects
+        const metaResult = await conn.execute(
+            `BEGIN PKG_TEMPORARY.p_GetMetadata(:i_TableName, :o_Cursor); END;`,
+            {
+                i_TableName: tableName,
+                o_Cursor: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
+            }
+        );
+        const metaResultSet = (metaResult.outBinds as any).o_Cursor;
+        const metaRows = await metaResultSet.getRows();
+        await metaResultSet.close();
+        const colNames = metaRows.map((row: any) => row[0]);
 
-        return { data: rows, total };
+        // Map array rows to objects
+        const mappedData = rows.map((row: any) => {
+            const obj: any = {};
+            colNames.forEach((name: string, idx: number) => {
+                obj[name] = row[idx];
+            });
+            return obj;
+        });
+
+        return { data: mappedData, total };
     } catch (err) {
         console.error('Error fetching data via procedure:', err);
         return { data: [], total: 0 };
