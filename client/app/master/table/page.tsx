@@ -21,8 +21,13 @@ interface ColumnMetadata {
     isPrimary: boolean;
 }
 
+interface TableInfo {
+    name: string;
+    comments: string;
+}
+
 export default function TableInquiryPage() {
-    const [tables, setTables] = useState<string[]>([]);
+    const [tables, setTables] = useState<TableInfo[]>([]);
     const [selectedTable, setSelectedTable] = useState<string>("");
     const [columns, setColumns] = useState<ColumnMetadata[]>([]);
     const [filters, setFilters] = useState<Record<string, string>>({});
@@ -31,7 +36,7 @@ export default function TableInquiryPage() {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
+    const [pageSize, setPageSize] = useState(10);
 
     const searchParams = useSearchParams();
     const pageTitle = searchParams.get('title') || "테이블조회";
@@ -50,29 +55,6 @@ export default function TableInquiryPage() {
         };
         fetchTables();
     }, [baseUrl]);
-
-    // Load table info (metadata)
-    const handleLoadTableInfo = async () => {
-        if (!selectedTable) return;
-        setLoading(true);
-        try {
-            const res = await fetch(`${baseUrl}/api/table/metadata?tableName=${selectedTable}`);
-            const json = await res.json();
-            setColumns(json.columns || []);
-            // Reset filters to PKs only
-            const initialFilters: Record<string, string> = {};
-            json.columns.forEach((col: ColumnMetadata) => {
-                if (col.isPrimary) initialFilters[col.name] = "";
-            });
-            setFilters(initialFilters);
-            setData([]);
-            setTotal(0);
-        } catch (e) {
-            console.error("Failed to fetch metadata", e);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const fetchData = useCallback(async (page: number = 1) => {
         if (!selectedTable) return;
@@ -100,7 +82,38 @@ export default function TableInquiryPage() {
         } finally {
             setLoading(false);
         }
-    }, [baseUrl, selectedTable, filters]);
+    }, [baseUrl, selectedTable, filters, pageSize]);
+
+    // Re-fetch when pageSize changes
+    useEffect(() => {
+        if (selectedTable && data.length > 0) {
+            fetchData(1);
+        }
+    }, [pageSize]);
+
+    // Load table info (metadata)
+    const handleLoadTableInfo = async () => {
+        if (!selectedTable) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${baseUrl}/api/table/metadata?tableName=${selectedTable}`);
+            const json = await res.json();
+            setColumns(json.columns || []);
+            // Reset filters to PKs only
+            const initialFilters: Record<string, string> = {};
+            json.columns.forEach((col: ColumnMetadata) => {
+                if (col.isPrimary) initialFilters[col.name] = "";
+            });
+            setFilters(initialFilters);
+            setData([]);
+            setTotal(0);
+            setCurrentPage(1);
+        } catch (e) {
+            console.error("Failed to fetch metadata", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handlePageChange = (page: number) => {
         fetchData(page);
@@ -119,20 +132,37 @@ export default function TableInquiryPage() {
                 </div>
 
                 {/* Table Selection Area */}
-                <div className="bg-white border rounded shadow-sm p-4 flex items-center gap-4">
+                <div className="bg-white border rounded shadow-sm p-4 flex items-center gap-6">
                     <div className="flex items-center gap-2">
                         <Label className="text-sm text-stone-600 font-normal">Oracle Table :</Label>
                         <Select value={selectedTable} onValueChange={setSelectedTable}>
-                            <SelectTrigger className="w-64 bg-stone-50 border-stone-300">
+                            <SelectTrigger className="w-80 bg-stone-50 border-stone-300">
                                 <SelectValue placeholder="SELECT TABLE" />
                             </SelectTrigger>
                             <SelectContent>
                                 {tables.map(t => (
-                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                    <SelectItem key={t.name} value={t.name}>
+                                        {t.name}{t.comments ? `(${t.comments})` : ""}
+                                    </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
+
+                    <div className="flex items-center gap-2">
+                        <Label className="text-sm text-stone-600 font-normal">Page Size :</Label>
+                        <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(Number(val))}>
+                            <SelectTrigger className="w-24 bg-stone-50 border-stone-300">
+                                <SelectValue placeholder="10" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[10, 20, 30, 40, 50].map(size => (
+                                    <SelectItem key={size} value={size.toString()}>{size}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <Button
                         className="bg-blue-900 hover:bg-blue-800 text-white font-semibold"
                         onClick={handleLoadTableInfo}

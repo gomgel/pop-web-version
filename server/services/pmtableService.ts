@@ -11,7 +11,11 @@ export interface TableMetadata {
     columns: ColumnMetadata[];
 }
 
-const mockTables = ['PMEMPLYM', 'PMAUTOLB', 'SAMPLE_TABLE'];
+const mockTables = [
+    { name: 'PMEMPLYM', comments: '사원마스터' },
+    { name: 'PMAUTOLB', comments: '자동라벨마스터' },
+    { name: 'SAMPLE_TABLE', comments: '샘플테이블' }
+];
 
 const mockMetadata: Record<string, ColumnMetadata[]> = {
     'PMEMPLYM': [
@@ -39,7 +43,7 @@ const getConnectionParams = () => ({
     connectString: process.env.ORACLE_CONNECTION_STRING
 });
 
-export const getTables = async (): Promise<string[]> => {
+export const getTables = async (): Promise<{ name: string; comments: string }[]> => {
     if (!process.env.ORACLE_CONNECTION_STRING) return mockTables;
 
     let conn;
@@ -54,7 +58,10 @@ export const getTables = async (): Promise<string[]> => {
         const rows = await resultSet.getRows();
         await resultSet.close();
 
-        return rows.map((row: any) => row[0]);
+        return rows.map((row: any) => ({
+            name: row[0],
+            comments: row[1] || ''
+        }));
     } catch (err) {
         console.error('Error fetching tables via procedure:', err);
         return mockTables;
