@@ -37,7 +37,7 @@ export const login = async (plant: string, emplCode: string, password: string): 
         conn = await oracledb.getConnection(getConnectionParams());
         const result = await conn.execute(
             `BEGIN 
-                p_SelectPasswdCheck(
+                Pkg_Temporary.p_SelectPasswdCheck(
                     :i_Plnt_Code, :i_Empl_Code, :i_Pass_Word,
                     :o_Plnt_Cod2, :o_Plnt_Name, :o_Hrde_code, :o_Hrde_Name,
                     :o_Dept_Code, :o_Dept_Name, :o_Empl_Cod2, :o_Empl_Name,
@@ -68,9 +68,17 @@ export const login = async (plant: string, emplCode: string, password: string): 
         );
 
         const out = result.outBinds as any;
-        const certDvsn = out.o_Cert_Dvsn;
+        const certDvsn = out.o_Cert_Dvsn?.trim();
+        const successCode = out.o_Success_Code;
 
-        if (certDvsn === 'Y') {
+        console.log('Login Procedure Attempt Result:', {
+            certDvsn,
+            successCode,
+            returnMessage: out.o_Return_Message,
+            errorText: out.o_ErrorText
+        });
+
+        if (certDvsn === 'Y' || successCode === 0) {
             return {
                 success: true,
                 message: out.o_Return_Message || 'Login Success',
