@@ -26,7 +26,7 @@ export function Header() {
 
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3 pr-4 border-r border-stone-700">
-                    <span className="text-sm font-medium text-stone-300">{userInfo?.v_Empl_Name || "User"}</span>
+                    <span className="text-sm font-medium text-stone-300">{userInfo?.v_Plnt_Name} | {userInfo?.v_Hrde_Name} | {userInfo?.v_Empl_Name}({userInfo?.v_Empl_Cod2})</span>
                     <Button
                         variant="ghost"
                         size="sm"

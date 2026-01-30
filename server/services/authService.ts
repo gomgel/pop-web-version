@@ -22,9 +22,10 @@ export const login = async (plant: string, emplCode: string, password: string): 
                 message: 'Login Successful (Mock)',
                 userInfo: {
                     v_Plnt_Cod2: plant,
-                    v_Plnt_Name: 'Sample Plant',
+                    v_Plnt_Name: '유구공장',
                     v_Empl_Cod2: emplCode,
-                    v_Empl_Name: 'Administrator',
+                    v_Empl_Name: '홍길동',
+                    v_Hrde_Name: 'CP02',
                     v_Cert_Dvsn: 'Y'
                 }
             };
@@ -37,7 +38,7 @@ export const login = async (plant: string, emplCode: string, password: string): 
         conn = await oracledb.getConnection(getConnectionParams());
         const result = await conn.execute(
             `BEGIN 
-                Pkg_Temporary.p_SelectPasswdCheck(
+                Pkg_Pmusrmst.p_SelectPasswdCheck(
                     :i_Plnt_Code, :i_Empl_Code, :i_Pass_Word,
                     :o_Plnt_Cod2, :o_Plnt_Name, :o_Hrde_code, :o_Hrde_Name,
                     :o_Dept_Code, :o_Dept_Name, :o_Empl_Cod2, :o_Empl_Name,

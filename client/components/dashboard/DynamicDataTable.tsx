@@ -17,6 +17,8 @@ import {
     Eye,
     Printer,
     FileText,
+    ArrowUp,
+    ArrowDown,
     ChevronsUpDown
 } from "lucide-react";
 
@@ -29,9 +31,11 @@ interface DynamicDataTableProps {
     columns: Column[];
     data: any[];
     loading?: boolean;
+    sortConfig?: { key: string; direction: 'asc' | 'desc' | null };
+    onSort?: (key: string) => void;
 }
 
-export function DynamicDataTable({ columns, data, loading }: DynamicDataTableProps) {
+export function DynamicDataTable({ columns, data, loading, sortConfig, onSort }: DynamicDataTableProps) {
     return (
         <div className="p-4 space-y-2 bg-white">
             <div className="flex items-center justify-between">
@@ -69,8 +73,16 @@ export function DynamicDataTable({ columns, data, loading }: DynamicDataTablePro
                             <TableHead className="w-12 text-center p-2"><Checkbox /></TableHead>
                             {columns.map((col) => (
                                 <TableHead key={col.key} className="font-bold text-stone-700 whitespace-nowrap">
-                                    <div className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded">
-                                        {col.label} <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                    <div
+                                        className="flex items-center gap-1 cursor-pointer hover:bg-stone-100 p-1 rounded transition-colors"
+                                        onClick={() => onSort?.(col.key)}
+                                    >
+                                        {col.label}
+                                        {sortConfig?.key === col.key ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3 text-blue-600" /> : <ArrowDown className="h-3 w-3 text-blue-600" />
+                                        ) : (
+                                            <ChevronsUpDown className="h-3 w-3 text-stone-400" />
+                                        )}
                                     </div>
                                 </TableHead>
                             ))}

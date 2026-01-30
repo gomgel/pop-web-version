@@ -37,6 +37,7 @@ export default function TableInquiryPage() {
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({ key: "", direction: null });
 
     const searchParams = useSearchParams();
     const pageTitle = searchParams.get('title') || "테이블조회";
@@ -123,6 +124,58 @@ export default function TableInquiryPage() {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
 
+    const handleExportCSV = useCallback(() => {
+        if (data.length === 0) {
+            alert("No data to export");
+            return;
+        }
+
+        const headers = columns.map(c => c.name);
+        const rows = data.map(item =>
+            columns.map(col => {
+                const val = item[col.name];
+                return val === null || val === undefined ? "" : `"${String(val).replace(/"/g, '""')}"`;
+            })
+        );
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${selectedTable}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }, [data, columns, selectedTable]);
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' | null = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = null;
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedData = [...data].sort((a, b) => {
+        if (!sortConfig.key || !sortConfig.direction) return 0;
+        const aVal = a[sortConfig.key];
+        const bVal = b[sortConfig.key];
+        if (aVal === bVal) return 0;
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        const comparison = aVal < bVal ? -1 : 1;
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+    });
+
     return (
         <div className="h-full flex flex-col bg-stone-100 uppercase">
             <div className="flex-1 overflow-auto p-4 space-y-4">
@@ -203,12 +256,20 @@ export default function TableInquiryPage() {
                             >
                                 CLEAR
                             </Button>
+                            <Button
+                                className="bg-green-700 hover:bg-green-600 text-white px-8 uppercase font-semibold ml-auto"
+                                onClick={handleExportCSV}
+                            >
+                                Export
+                            </Button>
                         </div>
 
                         <DynamicDataTable
                             columns={columns.map(c => ({ key: c.name, label: c.name }))}
-                            data={data}
+                            data={sortedData}
                             loading={loading}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
                         />
 
                         <Pagination

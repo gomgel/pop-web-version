@@ -3,7 +3,8 @@
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { useAuthStore } from "@/store/useAuthStore";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -12,7 +13,15 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
     const { isLoggedIn } = useAuthStore();
     const pathname = usePathname();
+    const router = useRouter();
     const isLoginPage = pathname === "/";
+
+    useEffect(() => {
+        // Redirect to login if not authenticated and trying to access protected route
+        if (!isLoggedIn && !isLoginPage) {
+            router.replace("/");
+        }
+    }, [isLoggedIn, isLoginPage, router]);
 
     // Only show layout components if logged in and not on login page
     const showLayout = isLoggedIn && !isLoginPage;
