@@ -30,7 +30,7 @@ export const getPmautobx = async (
         // Assuming Pkg_Pmusrmst.P_SPMAUTOBX based on Product Label service
         const result = await connection.execute(
             `BEGIN 
-                Pkg_Pmusrmst.P_SPMAUTOBX(
+                Pkg_Temporary.P_SPMAUTOBX(
                     CURSOR_DATA   => :cursor_data,
                     V_PLNT_CODE   => :V_PLNT_CODE,
                     V_PRDT_TPCD   => :V_PRDT_TPCD,

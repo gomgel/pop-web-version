@@ -29,7 +29,7 @@ export const getPmautolb = async (
         // Call the stored procedure based on the provided spec
         const result = await connection.execute(
             `BEGIN 
-                Pkg_Pmusrmst.P_SPMAUTOLB(
+                Pkg_Temporary.P_SPMAUTOLB(
                     CURSOR_DATA   => :cursor_data,
                     V_PLNT_CODE   => :V_PLNT_CODE,
                     V_PRDT_TPCD   => :V_PRDT_TPCD,
