@@ -24,7 +24,13 @@ const sidebarData = [
     { id: "detail", title: "생산내역조회", items: [] },
     { id: "status", title: "생산현황조회", items: [] },
     { id: "validation", title: "데이터검증", items: [] },
-    { id: "dashboard", title: "Dashboard", items: [] },
+    {
+        id: "dashboard",
+        title: "Dashboard",
+        items: [
+            { id: "production-total", name: "생산현황 DASHBOARD", href: "/dashboard/production" },
+        ]
+    },
 ];
 
 export function Sidebar() {

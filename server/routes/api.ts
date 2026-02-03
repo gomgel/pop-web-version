@@ -4,6 +4,7 @@ import { getEmployees } from '../services/pmemplymService';
 import { getPmautolb } from '../services/pmautolbService';
 import { getPmautobx } from '../services/pmautobxService';
 import { getTables, getTableMetadata, getTableData } from '../services/pmtableService';
+import { getP2000ProdTotal } from '../services/p2000ProdTotalService';
 import { login } from '../services/authService';
 
 const router = express.Router();
@@ -218,12 +219,29 @@ router.get('/table/data', async (req: Request, res: Response) => {
 
         res.json({
             data,
-            total,
+            total: data.length,
             page: p,
             pageSize: ps
         });
     } catch (error) {
         console.error('Error in /api/table/data:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/production/total', async (req: Request, res: Response) => {
+    try {
+        const plantCode = req.query.plantCode as string || '2000';
+        const mkpdDate = req.query.mkpdDate as string || '20260203';
+
+        const data = await getP2000ProdTotal(plantCode, mkpdDate);
+
+        res.json({
+            data,
+            total: data.length
+        });
+    } catch (error) {
+        console.error('Error in /api/production/total:', error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 });
