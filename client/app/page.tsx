@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,35 @@ export default function RootPage() {
   const [emplCode, setEmplCode] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [plants, setPlants] = useState<{ v_code_dvsn: string, v_code_name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const { isLoggedIn, setLogin } = useAuthStore();
   const router = useRouter();
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+  const fetchPlants = useCallback(async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/common/codes?plantCode=2000&sequNmbr=009`);
+      if (!res.ok) throw new Error("Failed to fetch plants");
+      const json = await res.json();
+      if (json.success) {
+        setPlants(json.data || []);
+      }
+    } catch (e) {
+      console.error("Error fetching plants:", e);
+      // Fallback to default plants if fetch fails
+      setPlants([
+        { v_code_dvsn: "2000", v_code_name: "유구공장" },
+        { v_code_dvsn: "2001", v_code_name: "인천공장" },
+        { v_code_dvsn: "2002", v_code_name: "포천공장" }
+      ]);
+    }
+  }, [baseUrl]);
+
+  useEffect(() => {
+    fetchPlants();
+  }, [fetchPlants]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -90,9 +114,19 @@ export default function RootPage() {
                   <SelectValue placeholder="SELECT PLANT" />
                 </SelectTrigger>
                 <SelectContent className="bg-stone-900 border-stone-800 text-white">
-                  <SelectItem value="2000">2000 - 유구공장</SelectItem>
-                  <SelectItem value="2001">2001 - 인천공장</SelectItem>
-                  <SelectItem value="2002">2002 - 포천공장</SelectItem>
+                  {plants.length > 0 ? (
+                    plants.map((p) => (
+                      <SelectItem key={p.v_code_dvsn} value={p.v_code_dvsn}>
+                        {p.v_code_dvsn} - {p.v_code_name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="2000">2000 - 유구공장</SelectItem>
+                      <SelectItem value="2001">2001 - 인천공장</SelectItem>
+                      <SelectItem value="2002">2002 - 포천공장</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

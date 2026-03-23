@@ -1,0 +1,178 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getTableData = exports.getTableMetadata = exports.getTables = void 0;
+const oracledb_1 = __importDefault(require("oracledb"));
+const mockTables = [
+    { name: 'PMEMPLYM', comments: '사원마스터' },
+    { name: 'PMAUTOLB', comments: '자동라벨마스터' },
+    { name: 'SAMPLE_TABLE', comments: '샘플테이블' }
+];
+const mockMetadata = {
+    'PMEMPLYM': [
+        { name: 'V_PLNT_CODE', type: 'VARCHAR2', isPrimary: true },
+        { name: 'V_EMPL_CODE', type: 'VARCHAR2', isPrimary: true },
+        { name: 'V_EMPL_NAME', type: 'VARCHAR2', isPrimary: false },
+        { name: 'V_HRDE_CODE', type: 'VARCHAR2', isPrimary: false },
+    ],
+    'PMAUTOLB': [
+        { name: 'V_PLNT_CODE', type: 'VARCHAR2', isPrimary: true },
+        { name: 'V_PRDT_TPCD', type: 'VARCHAR2', isPrimary: true },
+        { name: 'V_PRVS_NAME', type: 'VARCHAR2', isPrimary: false },
+        { name: 'V_POSS_INFO', type: 'VARCHAR2', isPrimary: false },
+    ],
+    'SAMPLE_TABLE': [
+        { name: 'ID', type: 'NUMBER', isPrimary: true },
+        { name: 'NAME', type: 'VARCHAR2', isPrimary: false },
+        { name: 'VAL', type: 'NUMBER', isPrimary: false },
+    ]
+};
+const getConnectionParams = () => ({
+    user: process.env.ORACLE_USER,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_CONNECTION_STRING
+});
+const getTables = async () => {
+    if (!process.env.ORACLE_CONNECTION_STRING)
+        return mockTables;
+    let conn;
+    try {
+        conn = await oracledb_1.default.getConnection(getConnectionParams());
+        const result = await conn.execute(`BEGIN PKG_TEMPORARY.p_ListTables(:o_Cursor); END;`, { o_Cursor: { type: oracledb_1.default.CURSOR, dir: oracledb_1.default.BIND_OUT } });
+        const resultSet = result.outBinds.o_Cursor;
+        const rows = await resultSet.getRows();
+        await resultSet.close();
+        return rows.map((row) => ({
+            name: row[0],
+            comments: row[1] || ''
+        }));
+    }
+    catch (err) {
+        console.error('Error fetching tables via procedure:', err);
+        return mockTables;
+    }
+    finally {
+        if (conn)
+            await conn.close();
+    }
+};
+exports.getTables = getTables;
+const getTableMetadata = async (tableName) => {
+    if (!process.env.ORACLE_CONNECTION_STRING) {
+        return { tableName, columns: mockMetadata[tableName] || [] };
+    }
+    let conn;
+    try {
+        conn = await oracledb_1.default.getConnection(getConnectionParams());
+        const result = await conn.execute(`BEGIN PKG_TEMPORARY.p_GetMetadata(:i_TableName, :o_Cursor); END;`, {
+            i_TableName: tableName,
+            o_Cursor: { type: oracledb_1.default.CURSOR, dir: oracledb_1.default.BIND_OUT }
+        });
+        const resultSet = result.outBinds.o_Cursor;
+        const rows = await resultSet.getRows();
+        await resultSet.close();
+        const columns = rows.map((row) => ({
+            name: row[0],
+            type: row[1],
+            isPrimary: row[2] === 'Y'
+        }));
+        return { tableName, columns };
+    }
+    catch (err) {
+        console.error('Error fetching metadata via procedure:', err);
+        return { tableName, columns: mockMetadata[tableName] || [] };
+    }
+    finally {
+        if (conn)
+            await conn.close();
+    }
+};
+exports.getTableMetadata = getTableMetadata;
+const getTableData = async (tableName, filters, page = 1, pageSize = 10) => {
+    if (!process.env.ORACLE_CONNECTION_STRING) {
+        // Mock fallback logic...
+        const mockData = [];
+        for (let i = 1; i <= 25; i++) {
+            if (tableName === 'PMEMPLYM') {
+                mockData.push({ V_PLNT_CODE: '2000', V_EMPL_CODE: `E${1000 + i}`, V_EMPL_NAME: `Employee ${i}`, V_HRDE_CODE: 'HR01' });
+            }
+            else if (tableName === 'PMAUTOLB') {
+                mockData.push({ V_PLNT_CODE: '2000', V_PRDT_TPCD: `T00${i}`, V_PRVS_NAME: `Label ${i}`, V_POSS_INFO: 'A1' });
+            }
+            else {
+                mockData.push({ ID: i, NAME: `Item ${i}`, VAL: Math.floor(Math.random() * 100) });
+            }
+        }
+        let filtered = mockData;
+        for (const [key, value] of Object.entries(filters)) {
+            if (value)
+                filtered = filtered.filter(row => row[key]?.toString() === value);
+        }
+        const total = filtered.length;
+        const start = (page - 1) * pageSize;
+        const paged = filtered.slice(start, start + pageSize);
+        return { data: paged, total };
+    }
+    let conn;
+    try {
+        conn = await oracledb_1.default.getConnection(getConnectionParams());
+        // Construct simple WHERE clause for PKs on the Node side safely
+        // Note: For a true production system, you might want to bind these in the procedure
+        // but since PKs are dynamic, building a string is often necessary for generic tools.
+        const whereParts = [];
+        for (const [key, value] of Object.entries(filters)) {
+            if (value) {
+                // Basic sanitization for simple values (quotes escaping)
+                const safeVal = value.replace(/'/g, "''");
+                whereParts.push(`${key} = '${safeVal}'`);
+            }
+        }
+        const whereClause = whereParts.join(' AND ');
+        const result = await conn.execute(`BEGIN 
+                PKG_TEMPORARY.p_GetData(
+                    :i_TableName, :i_WhereClause, :i_PageNo, :i_PageSize, 
+                    :o_TotalCount, :o_Cursor
+                ); 
+             END;`, {
+            i_TableName: tableName,
+            i_WhereClause: whereClause,
+            i_PageNo: page,
+            i_PageSize: pageSize,
+            o_TotalCount: { type: oracledb_1.default.NUMBER, dir: oracledb_1.default.BIND_OUT },
+            o_Cursor: { type: oracledb_1.default.CURSOR, dir: oracledb_1.default.BIND_OUT }
+        });
+        const total = result.outBinds.o_TotalCount;
+        const resultSet = result.outBinds.o_Cursor;
+        const rows = await resultSet.getRows(pageSize);
+        await resultSet.close();
+        // Fetch metadata to map array rows to objects
+        const metaResult = await conn.execute(`BEGIN PKG_TEMPORARY.p_GetMetadata(:i_TableName, :o_Cursor); END;`, {
+            i_TableName: tableName,
+            o_Cursor: { type: oracledb_1.default.CURSOR, dir: oracledb_1.default.BIND_OUT }
+        });
+        const metaResultSet = metaResult.outBinds.o_Cursor;
+        const metaRows = await metaResultSet.getRows();
+        await metaResultSet.close();
+        const colNames = metaRows.map((row) => row[0]);
+        // Map array rows to objects
+        const mappedData = rows.map((row) => {
+            const obj = {};
+            colNames.forEach((name, idx) => {
+                obj[name] = row[idx];
+            });
+            return obj;
+        });
+        return { data: mappedData, total };
+    }
+    catch (err) {
+        console.error('Error fetching data via procedure:', err);
+        return { data: [], total: 0 };
+    }
+    finally {
+        if (conn)
+            await conn.close();
+    }
+};
+exports.getTableData = getTableData;

@@ -5,9 +5,22 @@ import { getPmautolb } from '../services/pmautolbService';
 import { getPmautobx } from '../services/pmautobxService';
 import { getTables, getTableMetadata, getTableData } from '../services/pmtableService';
 import { getP2000ProdTotal } from '../services/p2000ProdTotalService';
+import { getDbMetrics } from '../services/dbMonitorService';
 import { login } from '../services/authService';
+import { getDailyProdPlan, getOrderDetails } from '../services/dailyProdPlanService';
+import { getCommonCodes } from '../services/commonService';
 
 const router = express.Router();
+
+router.get('/db/monitor', async (req: Request, res: Response) => {
+    try {
+        const metrics = await getDbMetrics();
+        res.json(metrics);
+    } catch (error) {
+        console.error('Error in /api/db/monitor:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
 
 router.post('/login', async (req: Request, res: Response) => {
     try {
@@ -243,6 +256,51 @@ router.get('/production/total', async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error in /api/production/total:', error);
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+router.get('/production/daily-plan', async (req: Request, res: Response) => {
+    try {
+        const { plantCode, deptCode, ordrNmbr, fromDate, toDate } = req.query;
+        const data = await getDailyProdPlan(
+            plantCode as string,
+            deptCode as string,
+            ordrNmbr as string,
+            fromDate as string,
+            toDate as string
+        );
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Error in /api/production/daily-plan:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+router.get('/production/order-details', async (req: Request, res: Response) => {
+    try {
+        const { plantCode, ordrNmbr } = req.query;
+        if (!plantCode || !ordrNmbr) {
+            return res.status(400).json({ success: false, message: 'plantCode and ordrNmbr are required' });
+        }
+        const data = await getOrderDetails(plantCode as string, ordrNmbr as string);
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Error in /api/production/order-details:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+router.get('/common/codes', async (req: Request, res: Response) => {
+    try {
+        const { plantCode, sequNmbr } = req.query;
+        if (!plantCode || !sequNmbr) {
+            return res.status(400).json({ success: false, message: 'plantCode and sequNmbr are required' });
+        }
+        const data = await getCommonCodes(plantCode as string, sequNmbr as string);
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Error in /api/common/codes:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
 

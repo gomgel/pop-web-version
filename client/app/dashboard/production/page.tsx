@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ProductionCharts } from "@/components/production/ProductionCharts";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,8 @@ export default function ProductionDashboardPage() {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [plantCode, setPlantCode] = useState("2000");
+    const [plants, setPlants] = useState<{ v_code_dvsn: string, v_code_name: string }[]>([]);
+    const { isLoggedIn } = useAuthStore();
     const [date, setDate] = useState<Date | undefined>(new Date(2026, 1, 3)); // Feb 3, 2026
 
     const mkpdDate = date ? format(date, "yyyyMMdd") : "";
@@ -35,6 +38,30 @@ export default function ProductionDashboardPage() {
             setLoading(false);
         }
     }, [plantCode, mkpdDate]);
+
+    const fetchPlants = useCallback(async () => {
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+            const res = await fetch(`${baseUrl}/api/common/codes?plantCode=2000&sequNmbr=009`);
+            if (!res.ok) throw new Error("Failed to fetch plants");
+            const json = await res.json();
+            if (json.success) {
+                setPlants(json.data || []);
+            }
+        } catch (e) {
+            console.error("Error fetching plants:", e);
+            // Fallback to default plants if fetch fails
+            setPlants([
+                { v_code_dvsn: "2000", v_code_name: "유구공장" },
+                { v_code_dvsn: "2001", v_code_name: "인천공장" },
+                { v_code_dvsn: "2002", v_code_name: "포천공장" }
+            ]);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPlants();
+    }, [fetchPlants]);
 
     useEffect(() => {
         fetchData();
@@ -76,9 +103,19 @@ export default function ProductionDashboardPage() {
                                 <SelectValue placeholder="Plant" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="2000">유구공장</SelectItem>
-                                <SelectItem value="2001">인천공장</SelectItem>
-                                <SelectItem value="2002">포천공장</SelectItem>
+                                {plants.length > 0 ? (
+                                    plants.map((p) => (
+                                        <SelectItem key={p.v_code_dvsn} value={p.v_code_dvsn}>
+                                            {p.v_code_name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <>
+                                        <SelectItem value="2000">유구공장</SelectItem>
+                                        <SelectItem value="2001">인천공장</SelectItem>
+                                        <SelectItem value="2002">포천공장</SelectItem>
+                                    </>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
